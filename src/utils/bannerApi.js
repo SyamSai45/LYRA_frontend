@@ -1,7 +1,7 @@
 const BANNER_API_BASE = "http://localhost:6055/api/admin/banners";
 
 export const bannerApiFetch = async (path, options = {}) => {
-  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
   const token = user?.token;
 
   const res = await fetch(`${BANNER_API_BASE}${path}`, {

@@ -15,7 +15,6 @@ const ProductModal = ({ product, onSave, onClose }) => {
     setSaving(true);
     try { await onSave(form); } finally { setSaving(false); }
   };
-
   const field = (label, key, opts = {}) => (
     <div className={opts.col2 ? "col-span-2" : ""}>
       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{label}</label>
@@ -33,7 +32,6 @@ const ProductModal = ({ product, onSave, onClose }) => {
       )}
     </div>
   );
-
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />

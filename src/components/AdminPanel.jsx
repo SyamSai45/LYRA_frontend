@@ -8,6 +8,7 @@ import AdminAnalytics  from "./admin/AdminAnalytics.jsx";
 import AdminBanners    from "./admin/AdminBanners.jsx";
 import AdminHeroSlides from "./admin/AdminHeroSlides.jsx";
 import AdminSettings   from "./admin/AdminSettings.jsx";
+import AdminCategories from "./admin/AdminCategories.jsx";
 
 // ── Toast ─────────────────────────────────────────────────────────
 const Toast = ({ message, type, onClose }) => (
@@ -23,6 +24,7 @@ const Toast = ({ message, type, onClose }) => (
 const NAV_ITEMS = [
   { id: "dashboard",  icon: "◈",  label: "Dashboard"   },
   { id: "orders",     icon: "◉",  label: "Orders"      },
+  { id: "categories", icon: "📂", label: "Categories" },
   { id: "products",   icon: "▦",  label: "Products"    },
   { id: "customers",  icon: "◎",  label: "Customers"   },
   { id: "analytics",  icon: "◈",  label: "Analytics"   },
@@ -242,6 +244,9 @@ const AdminPanel = () => {
               searchQuery={searchQuery}
             />
           )}
+          
+          <AdminCategories notify={notify} />
+
           {section === "customers" && (
             <AdminCustomers
               customers={customers}

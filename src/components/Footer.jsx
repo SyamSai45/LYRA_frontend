@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // ── App store badge SVGs inlined for portability ──
 const AppStoreBadge = () => (
@@ -94,6 +95,7 @@ const PAYMENT_ICONS = [
 const LyraFooter = () => {
   const [emailInput, setEmailInput] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubscribe = (e) => {
     e.preventDefault();
@@ -276,9 +278,12 @@ const LyraFooter = () => {
 
             <p className="text-white/25 text-xs text-center md:text-right">
               In case of any concern,{" "}
-              <a href="#" onClick={(e) => e.preventDefault()} className="text-violet-400 hover:text-pink-300 underline underline-offset-2 transition-colors">
+              <button 
+                onClick={() => navigate('/contact')} 
+                className="text-violet-400 hover:text-pink-300 underline underline-offset-2 transition-colors cursor-pointer"
+              >
                 Contact Us
-              </a>
+              </button>
             </p>
           </div>
 

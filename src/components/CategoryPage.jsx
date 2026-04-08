@@ -266,6 +266,134 @@ const CategoryPage = () => {
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
         .cat-serif { font-family:'Cormorant Garamond',Georgia,serif !important; }
 
+        /* ── Responsive Adjustments ── */
+        @media (max-width: 640px) {
+          .cat-topbar {
+            padding-left: 12px;
+            padding-right: 12px;
+          }
+          
+          .cat-topbar .max-w-screen-xl {
+            padding-left: 0;
+            padding-right: 0;
+          }
+          
+          .cat-grid.g4 {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+          }
+          
+          .cat-card {
+            padding: 8px;
+          }
+          
+          .cat-atc-btn {
+            padding: 8px;
+            font-size: 10px;
+          }
+          
+          .cat-view-btn {
+            width: 32px;
+            height: 32px;
+          }
+          
+          .cat-sort {
+            padding: 6px 10px;
+          }
+          
+          .cat-chip {
+            font-size: 10px;
+            padding: 4px 8px;
+          }
+          
+          /* Mobile-specific product card adjustments */
+          .cat-card {
+            transform: scale(1);
+            transition: transform 0.2s;
+          }
+          
+          .cat-card:active {
+            transform: scale(0.98);
+          }
+          
+          /* List view adjustments for mobile */
+          .flex-col.gap-4 > div {
+            margin-bottom: 8px;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .cat-grid.g4 {
+            grid-template-columns: 1fr;
+          }
+          
+          .cat-card {
+            max-width: 100%;
+          }
+        }
+
+        /* Tablet adjustments */
+        @media (min-width: 641px) and (max-width: 1023px) {
+          .cat-grid.g4 {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+          }
+          
+          .cat-card {
+            padding: 10px;
+          }
+        }
+
+        /* Mobile filter drawer improvements */
+        @media (max-width: 1023px) {
+          .fixed.inset-0.z-\[100\].lg\:hidden {
+            z-index: 1000;
+          }
+          
+          .absolute.left-0.top-0.h-full.w-\[85\%\].max-w-sm {
+            width: 90%;
+            max-width: 320px;
+          }
+          
+          .filter-range::-webkit-slider-thumb {
+            width: 24px;
+            height: 24px;
+          }
+          
+          /* Larger touch targets for mobile filters */
+          .flex.items-center.gap-3.cursor-pointer.group.py-1 {
+            padding: 12px 0;
+          }
+          
+          input[type="checkbox"], input[type="radio"] {
+            width: 20px;
+            height: 20px;
+          }
+          
+          /* Better spacing for filter options */
+          .space-y-2 > * {
+            margin-bottom: 8px;
+          }
+          
+          /* Color filter larger touch targets */
+          .flex.flex-wrap.gap-2\.5 button {
+            width: 32px;
+            height: 32px;
+          }
+        }
+
+        /* Prevent horizontal scrolling on mobile */
+        @media (max-width: 767px) {
+          html, body {
+            overflow-x: hidden;
+          }
+          
+          .max-w-screen-xl {
+            padding-left: 12px;
+            padding-right: 12px;
+          }
+        }
+
         /* ── Topbar ── */
         .cat-topbar{
           position:sticky;top:0;z-index:50;
@@ -331,8 +459,11 @@ const CategoryPage = () => {
       {/* ─── TOPBAR ─── */}
       <div className="cat-topbar">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3 sm:gap-4">
-          <button onClick={()=>navigate("/dashboard")}
-            className="flex items-center gap-2 text-white/60 hover:text-white text-xs font-semibold tracking-wider uppercase transition-colors px-3 py-1.5 rounded-xl hover:bg-white/8">
+          {/* Home button - hidden on smallest screens */}
+          <button 
+            onClick={() => navigate("/dashboard")}
+            className="hidden xs:flex items-center gap-2 text-white/60 hover:text-white text-xs font-semibold tracking-wider uppercase transition-colors px-3 py-1.5 rounded-xl hover:bg-white/8"
+          >
             ← Home
           </button>
           <div className="flex items-center gap-2 text-xs text-white/30 hidden sm:flex">
@@ -342,84 +473,268 @@ const CategoryPage = () => {
             {activeCategory !== "All" && <><span>/</span><span className="text-white/70 font-semibold">{activeCategory}</span></>}
             {activeSubCat && <><span>/</span><span className="text-white/50">{activeSubCat}</span></>}
           </div>
-          <div className="flex-1 max-w-md mx-auto relative">
+          {/* Search bar - takes full width on mobile */}
+          <div className="flex-1 max-w-md mx-auto relative min-w-0">
             <input
               className="w-full bg-white/8 border border-white/10 text-white placeholder-white/25 rounded-xl px-4 py-2 pr-9 text-xs outline-none focus:bg-white focus:text-gray-900 focus:placeholder-gray-400 focus:border-violet-400 transition-all duration-300"
               placeholder={`Search ${activeCategory === "All" ? "all products" : activeCategory.toLowerCase()}...`}
-              value={search} onChange={(e)=>setSearch(e.target.value)} />
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)} 
+            />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 text-sm pointer-events-none">⌕</span>
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <button onClick={()=>setFiltersOpen(v=>!v)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tracking-wider uppercase transition-all ${filtersOpen?"bg-violet-600 text-white":"bg-white/8 text-white/50 hover:text-white"}`}>
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M7 12h10M11 20h2"/></svg>
-              Filters {activeCount>0 && <span className="bg-pink-500 text-white rounded-full px-1.5" style={{fontSize:"9px"}}>{activeCount}</span>}
+          
+          {/* Filter and cart buttons - adjust spacing */}
+          <div className="flex items-center gap-2 ml-2">
+            <button 
+              onClick={() => setFiltersOpen(v => !v)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tracking-wider uppercase transition-all ${filtersOpen ? "bg-violet-600 text-white" : "bg-white/8 text-white/50 hover:text-white"}`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M7 12h10M11 20h2"/>
+              </svg>
+              {activeCount > 0 && (
+                <span className="bg-pink-500 text-white rounded-full px-1.5" style={{fontSize:"9px"}}>
+                  {activeCount}
+                </span>
+              )}
             </button>
-            <button onClick={()=>navigate("/cart")} className="relative w-9 h-9 rounded-xl bg-white/8 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/15 transition-all">
+            
+            <button 
+              onClick={() => navigate("/cart")} 
+              className="relative w-9 h-9 rounded-xl bg-white/8 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/15 transition-all"
+            >
               🛒
-              {cartCount>0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-pink-500 rounded-full text-white flex items-center justify-center font-bold" style={{fontSize:"8px"}}>{cartCount}</span>}
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-pink-500 rounded-full text-white flex items-center justify-center font-bold" style={{fontSize:"8px"}}>
+                  {cartCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
       </div>
+
 
       <div className="max-w-screen-xl mx-auto px-4 py-6 sm:py-8 flex flex-col lg:flex-row gap-6 items-start">
 
 
         {/* ─── MOBILE FILTER DRAWER ─── */}
         {filtersOpen && (
-          <div className="fixed inset-0 z-[100] lg:hidden">
-            {/* Overlay */}
+          <div className="fixed inset-0 z-[1000] lg:hidden">
+            {/* Overlay with Blur Effect */}
             <div
-              className="absolute inset-0 bg-black/40"
+              className="absolute inset-0 backdrop-blur-sm bg-black/30"
               onClick={() => setFiltersOpen(false)}
             />
 
-            {/* Drawer */}
-            <div className="absolute left-0 top-0 h-full w-[85%] max-w-sm bg-white overflow-y-auto shadow-xl p-4">
-              
-              {/* Close button */}
-              <div className="flex justify-between items-center mb-4">
-                <p className="font-bold text-gray-800">Filters</p>
-                <button onClick={() => setFiltersOpen(false)}>✕</button>
+            {/* Drawer with Slide-In Animation */}
+            <div className="absolute left-0 top-0 h-full w-[90%] max-w-[320px] bg-white shadow-2xl transform transition-transform duration-300 ease-out overflow-y-auto">
+              {/* Close Button */}
+              <div className="sticky top-0 z-10 bg-white p-4 border-b border-gray-200 flex justify-between items-center">
+                <p className="text-lg font-bold text-gray-900">Filters</p>
+                <button
+                  onClick={() => setFiltersOpen(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 transition-colors"
+                >
+                  ✕
+                </button>
               </div>
 
-              {/* 👉 MOVE YOUR SIDEBAR CONTENT HERE */}
-              
-              {/* Categories */}
-              <div className="mb-4">
-                {sidebarCats.map((cat) => (
-                  <button
-                    key={cat._id}
-                    onClick={() => {
-                      handleCategory(cat);
-                      setFiltersOpen(false);
-                    }}
-                    className="block w-full text-left py-2 text-sm"
-                  >
-                    {cat.label || cat.name}
-                  </button>
-                ))}
+              {/* Scrollable Content */}
+              <div className="p-4 space-y-4">
+                {/* Categories */}
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 mb-2">Categories</p>
+                  <div className="space-y-1">
+                    {sidebarCats.map((cat) => (
+                      <button
+                        key={cat._id}
+                        onClick={() => {
+                          handleCategory(cat);
+                          setFiltersOpen(false);
+                        }}
+                        className={`w-full text-left py-3 px-4 rounded-lg transition-all ${
+                          activeCategory === cat.name || activeCategory === cat.slug
+                            ? "bg-violet-600 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        {cat.label || cat.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* All Filters */}
+                <div className="space-y-6">
+                  {/* Price Filter */}
+                  <div>
+                    <FilterBlock title="Price Range">
+                      <div className="flex justify-between text-sm text-gray-500 mb-3">
+                        <span>₹0</span>
+                        <span className="font-bold text-violet-600">₹{maxPrice.toLocaleString()}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={maxProductPrice}
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(Number(e.target.value))}
+                        className="filter-range w-full"
+                      />
+                      <div className="flex gap-2 mt-3 flex-wrap">
+                        {[1000, 3000, 5000, 10000].map((v) => (
+                          <button
+                            key={v}
+                            onClick={() => setMaxPrice(v)}
+                            className={`text-xs px-3 py-2 rounded-full border transition-all ${
+                              maxPrice === v
+                                ? "bg-violet-600 text-white border-violet-600"
+                                : "border-violet-100 text-gray-500 hover:border-violet-400"
+                            }`}
+                          >
+                            ₹{v >= 1000 ? `${v / 1000}K` : v}
+                          </button>
+                        ))}
+                      </div>
+                    </FilterBlock>
+                  </div>
+
+                  {/* Rating Filter */}
+                  <div>
+                    <FilterBlock title="Rating">
+                      <div className="space-y-3">
+                        {[4, 3, 2].map((r) => (
+                          <label
+                            key={r}
+                            className="flex items-center gap-3 cursor-pointer py-2"
+                          >
+                            <input
+                              type="radio"
+                              name="rating"
+                              checked={minRating === r}
+                              onChange={() => setMinRating(minRating === r ? 0 : r)}
+                              className="accent-violet-600 w-5 h-5 flex-shrink-0"
+                            />
+                            <span className="text-amber-400 text-sm">
+                              {"★".repeat(r)}
+                              {"☆".repeat(5 - r)}
+                            </span>
+                            <span className="text-xs text-gray-400">& up</span>
+                            <span className="ml-auto text-xs text-gray-300">
+                              ({subFilteredProducts.filter((p) => (p.rating || 0) >= r).length})
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </FilterBlock>
+                  </div>
+
+                  {/* Brand Filter */}
+                  {availableBrands.length > 0 && (
+                    <div>
+                      <FilterBlock title="Brand">
+                        <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 scrollbar-thin">
+                          {availableBrands.map((b) => (
+                            <label
+                              key={b}
+                              className="flex items-center gap-3 cursor-pointer py-2"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selBrands.includes(b)}
+                                onChange={() => toggle(setSelBrands, b)}
+                                className="accent-violet-600 w-5 h-5 flex-shrink-0"
+                              />
+                              <span className="text-sm text-gray-700 flex-1 truncate">
+                                {b}
+                              </span>
+                              <span className="text-xs text-gray-300">
+                                ({subFilteredProducts.filter((p) => p.brand === b).length})
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </FilterBlock>
+                    </div>
+                  )}
+
+                  {/* Color Filter */}
+                  {availableColors.length > 0 && (
+                    <div>
+                      <FilterBlock title="Color">
+                        <div className="flex flex-wrap gap-3">
+                          {availableColors.map((c) => (
+                            <button
+                              key={c}
+                              title={c}
+                              onClick={() => toggle(setSelColors, c)}
+                              className={`w-8 h-8 rounded-full transition-all ${
+                                selColors.includes(c)
+                                  ? "ring-2 ring-violet-600 ring-offset-2"
+                                  : ""
+                              }`}
+                              style={{
+                                background: COLOR_MAP[c] || "#ccc",
+                                border: c === "White" ? "1.5px solid #e5e7eb" : "none",
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </FilterBlock>
+                    </div>
+                  )}
+
+                  {/* Offers Filter */}
+                  <div>
+                    <FilterBlock title="Offers">
+                      <div className="space-y-4">
+                        {[
+                          { label: "On Sale", state: onlyDiscount, set: setOnlyDiscount },
+                          { label: "In Stock", state: onlyInStock, set: setOnlyInStock },
+                        ].map(({ label, state, set }) => (
+                          <div
+                            key={label}
+                            className="flex items-center justify-between py-1"
+                          >
+                            <span className="text-sm text-gray-700">{label}</span>
+                            <button
+                              onClick={() => set((v) => !v)}
+                              className="lyra-toggle"
+                              style={{ background: state ? "#7c3aed" : "#e5e7eb" }}
+                            >
+                              <div
+                                className="lyra-toggle-knob"
+                                style={{ left: state ? "22px" : "2px" }}
+                              />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </FilterBlock>
+                  </div>
+                </div>
               </div>
 
-              {/* Filters */}
-              <div>
-                {/* reuse FilterBlock */}
-                <FilterBlock title="Price">
-                  <input
-                    type="range"
-                    min={0}
-                    max={maxProductPrice}
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(Number(e.target.value))}
-                    className="filter-range"
-                  />
-                </FilterBlock>
+              {/* Apply/Clear Buttons (sticky bottom) */}
+              <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex gap-3">
+                <button
+                  onClick={clearFilters}
+                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium"
+                >
+                  Clear All
+                </button>
+                <button
+                  onClick={() => setFiltersOpen(false)}
+                  className="flex-1 py-2 px-4 bg-violet-600 text-white rounded-lg text-sm font-medium"
+                >
+                  Apply Filters
+                </button>
               </div>
             </div>
           </div>
         )}
-
         {/* ─── SIDEBAR ─── */}
         {filtersOpen && (
           <aside className="hidden lg:block w-60 flex-shrink-0 sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto space-y-4 scrollbar-thin">
@@ -562,26 +877,48 @@ const CategoryPage = () => {
         )}
 
         {/* ─── MAIN ─── */}
-        <main className="flex-1 min-w-0">
-          {/* Header */}
-          <div className="mb-5 flex items-end justify-between flex-wrap gap-3">
-            <div>
+        <main className="flex-1 min-w-0 px-2 sm:px-0">
+          {/* Header with responsive adjustments */}
+          <div className="mb-4 sm:mb-5 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div className="order-2 sm:order-1">
               <p className="text-xs tracking-[0.3em] uppercase mb-1" style={{color:activeCatObj?.color||"#7c3aed"}}>
                 ✦ Lyra · {activeCatObj?.icon} {activeCatObj?.label||activeCatObj?.name}
                 {activeSubCat && <span className="text-gray-400"> › {activeSubCat}</span>}
               </p>
-              <h1 className="cat-serif text-3xl sm:text-4xl font-light text-gray-900">
-                {activeCategory==="All" ? <>All <em className="text-violet-600">Products</em></> : <>{activeCatObj?.label||activeCatObj?.name} {activeSubCat && <span className="text-gray-400 text-2xl">· {activeSubCat}</span>} <em style={{color:activeCatObj?.color||"#7c3aed"}}>Collection</em></>}
+              <h1 className="cat-serif text-2xl sm:text-3xl md:text-4xl font-light text-gray-900">
+                {activeCategory==="All" ? 
+                  <>All <em className="text-violet-600">Products</em></> : 
+                  <>{activeCatObj?.label||activeCatObj?.name} 
+                    {activeSubCat && <span className="text-gray-400 text-xl sm:text-2xl">· {activeSubCat}</span>} 
+                    <em style={{color:activeCatObj?.color||"#7c3aed"}}>Collection</em>
+                  </>
+                }
               </h1>
-              <p className="text-sm text-gray-400 mt-1 font-light">{loading?"Loading…":`${filtered.length} product${filtered.length===1?"":"s"} found`}</p>
+              <p className="text-sm text-gray-400 mt-1 font-light">
+                {loading ? "Loading..." : `${filtered.length} product${filtered.length===1?"":"s"} found`}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <select value={sort} onChange={(e)=>setSort(e.target.value)} className="cat-sort">
-                {SORT_OPTIONS.map((o)=><option key={o.value} value={o.value}>{o.label}</option>)}
+            
+            <div className="order-1 sm:order-2 flex items-center gap-2 justify-between sm:justify-end">
+              <select 
+                value={sort} 
+                onChange={(e) => setSort(e.target.value)} 
+                className="cat-sort text-xs sm:text-sm"
+              >
+                {SORT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
               </select>
+              
               <div className="flex rounded-xl border border-violet-100 overflow-hidden">
-                {[{mode:"grid",icon:"⊞"},{mode:"list",icon:"☰"}].map(({mode,icon})=>(
-                  <button key={mode} onClick={()=>setViewMode(mode)} className={`cat-view-btn ${viewMode===mode?"active":""}`}>{icon}</button>
+                {[{mode:"grid",icon:"⊞"},{mode:"list",icon:"☰"}].map(({mode,icon}) => (
+                  <button 
+                    key={mode} 
+                    onClick={() => setViewMode(mode)} 
+                    className={`cat-view-btn ${viewMode===mode?"active":""}`}
+                  >
+                    {icon}
+                  </button>
                 ))}
               </div>
             </div>

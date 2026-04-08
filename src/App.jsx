@@ -11,6 +11,8 @@ import WishlistPage from "./components/WishlistPage";
 import ProfilePage from "./ProfilePage";
 import AdminPanel from "./components/AdminPanel";
 import { useMemo } from "react";
+import ContactPage from "./components/ContactForm";
+import LyraFooter from "./components/Footer";
 
 
 const ProtectedRoute = ({ children }) => {
@@ -43,7 +45,10 @@ function App() {
         <Route path="/wishlist" element={<ProtectedRoute><WishlistProvider /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+        <Route path="/contact" element={<ContactPage />} />
+
       </Routes>
+      <LyraFooter />
     </Router>
     </WishlistProvider >
     </CartProvider>

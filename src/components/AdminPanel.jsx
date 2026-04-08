@@ -9,7 +9,7 @@ import AdminBanners    from "./admin/AdminBanners.jsx";
 import AdminHeroSlides from "./admin/AdminHeroSlides.jsx";
 import AdminSettings   from "./admin/AdminSettings.jsx";
 import AdminCategories from "./admin/AdminCategories.jsx";
-
+import AdminContacts   from "./admin/AdminContact.jsx"; 
 // ── Toast ─────────────────────────────────────────────────────────
 const Toast = ({ message, type, onClose }) => (
   <div className={`fixed top-4 right-4 z-[300] px-5 py-3 rounded-xl shadow-xl text-sm font-semibold flex items-center gap-2 ${
@@ -20,17 +20,18 @@ const Toast = ({ message, type, onClose }) => (
   </div>
 );
 
-// ── Sidebar nav items (HeroSlides added) ─────────────────────────
+// ── Sidebar nav items ─────────────────────────────────────────────
 const NAV_ITEMS = [
-  { id: "dashboard",  icon: "◈",  label: "Dashboard"   },
-  { id: "orders",     icon: "◉",  label: "Orders"      },
-  { id: "categories", icon: "📂", label: "Categories" },
-  { id: "products",   icon: "▦",  label: "Products"    },
-  { id: "customers",  icon: "◎",  label: "Customers"   },
-  { id: "analytics",  icon: "◈",  label: "Analytics"   },
-  { id: "heroslides", icon: "🎞", label: "Hero Slides" },
-  { id: "banners",    icon: "🖼", label: "Banners"     },
-  { id: "settings",   icon: "◍",  label: "Settings"    },
+  { id: "dashboard",  icon: "◈",  label: "Dashboard"    },
+  { id: "orders",     icon: "◉",  label: "Orders"       },
+  { id: "categories", icon: "📂", label: "Categories"   },
+  { id: "products",   icon: "▦",  label: "Products"     },
+  { id: "customers",  icon: "◎",  label: "Customers"    },
+  { id: "analytics",  icon: "◈",  label: "Analytics"    },
+  { id: "heroslides", icon: "🎞", label: "Hero Slides"  },
+  { id: "banners",    icon: "🖼", label: "Banners"      },
+  { id: "contacts",   icon: "💬", label: "Contact Form" }, // ← NEW NAV ITEM
+  { id: "settings",   icon: "◍",  label: "Settings"     },
 ];
 
 // ══════════════════════════════════════════════════════════════════
@@ -43,12 +44,13 @@ const AdminPanel = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Shared data
-  const [products,  setProducts]  = useState([]);
-  const [orders,    setOrders]    = useState([]);
-  const [customers, setCustomers] = useState([]);
-  const [analytics, setAnalytics] = useState(null);
-  const [loading,   setLoading]   = useState({});
-  const [errors,    setErrors]    = useState({});
+  const [products,      setProducts]      = useState([]);
+  const [orders,        setOrders]        = useState([]);
+  const [customers,     setCustomers]     = useState([]);
+  const [analytics,     setAnalytics]     = useState(null);
+  const [contactsCount, setContactsCount] = useState(0); // ← unread badge
+  const [loading,       setLoading]       = useState({});
+  const [errors,        setErrors]        = useState({});
 
   const notify = useCallback((msg, type = "success") => {
     setToast({ msg, type });
@@ -99,17 +101,46 @@ const AdminPanel = () => {
     finally { setLoad("analytics", false); }
   }, []);
 
+  // ── Fetch unread contact count for sidebar badge ──────────────
+  const fetchContactsBadge = useCallback(async () => {
+    try {
+      const token = (() => {
+        try {
+          const a = JSON.parse(sessionStorage.getItem("admin") || "{}");
+          const u = JSON.parse(sessionStorage.getItem("user")  || "{}");
+          return a.token || u.token || "";
+        } catch { return ""; }
+      })();
+      const res = await fetch("http://localhost:6055/api/contact?status=new&limit=1", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // backend returns { contacts:[...], total:N }
+        setContactsCount(data.total ?? (Array.isArray(data) ? data.length : 0));
+      }
+    } catch { /* non-critical, ignore */ }
+  }, []);
+
   useEffect(() => {
     fetchOrders();
     fetchProducts();
     fetchCustomers();
-  }, [fetchOrders, fetchProducts, fetchCustomers]);
+    fetchContactsBadge(); // ← fetch badge on mount
+  }, [fetchOrders, fetchProducts, fetchCustomers, fetchContactsBadge]);
 
   useEffect(() => {
     if (section === "analytics" && !analytics && !loading.analytics) fetchAnalytics();
   }, [section]); // eslint-disable-line
 
-  const pendingOrders = orders.filter((o) => ["Pending","Processing"].includes(o.status)).length;
+  // Re-fetch contacts badge whenever user navigates away from contacts section
+  useEffect(() => {
+    if (section !== "contacts") fetchContactsBadge();
+  }, [section, fetchContactsBadge]);
+
+  const pendingOrders = orders.filter((o) =>
+    ["Pending", "Processing"].includes(o.status)
+  ).length;
 
   const handleRetry = (sec) => {
     if (sec === "orders")    fetchOrders();
@@ -119,7 +150,15 @@ const AdminPanel = () => {
   };
 
   const changeSection = (id) => { setSection(id); setSearchQuery(""); };
-  const SEARCH_SECTIONS = ["orders","products","customers"];
+  const SEARCH_SECTIONS = ["orders", "products", "customers"];
+
+  // Badge count per nav item
+  const getBadge = (id) => {
+    if (id === "orders")   return pendingOrders;
+    if (id === "products") return products.length;
+    if (id === "contacts") return contactsCount; // ← new unread contact badge
+    return 0;
+  };
 
   return (
     <div className="min-h-screen bg-[#0f0a1a] flex font-sans" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -136,37 +175,53 @@ const AdminPanel = () => {
               </div>
             </div>
           )}
-          <button onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={`${sidebarOpen ? "ml-auto" : "mx-auto"} w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all text-xs`}>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className={`${sidebarOpen ? "ml-auto" : "mx-auto"} w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all text-xs`}
+          >
             {sidebarOpen ? "◀" : "▶"}
           </button>
         </div>
 
         <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
-            const badge =
-              item.id === "orders"   ? pendingOrders   :
-              item.id === "products" ? products.length : 0;
+            const badge   = getBadge(item.id);
+            const isActive = section === item.id;
+            // Contacts badge uses a different colour (cyan) to distinguish from orders
+            const badgeBg = item.id === "contacts" ? "bg-cyan-500" : "bg-violet-500";
+
             return (
-              <button key={item.id} onClick={() => changeSection(item.id)}
+              <button
+                key={item.id}
+                onClick={() => changeSection(item.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all relative ${
-                  section === item.id
+                  isActive
                     ? "bg-gradient-to-r from-violet-600/30 to-purple-600/20 text-violet-300 border border-violet-500/20"
                     : "text-white/40 hover:text-white/70 hover:bg-white/5"
-                }`}>
-                <span className={`text-lg flex-shrink-0 ${section === item.id ? "text-violet-400" : ""}`}>{item.icon}</span>
+                }`}
+              >
+                <span className={`text-lg flex-shrink-0 ${isActive ? "text-violet-400" : ""}`}>
+                  {item.icon}
+                </span>
+
                 {sidebarOpen && (
                   <>
                     <span className="flex-1 text-left">{item.label}</span>
                     {badge > 0 && (
                       <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                        section === item.id ? "bg-violet-500 text-white" : "bg-white/10 text-white/50"
-                      }`}>{badge}</span>
+                        isActive ? `${badgeBg} text-white` : "bg-white/10 text-white/50"
+                      }`}>
+                        {badge}
+                      </span>
                     )}
                   </>
                 )}
+
+                {/* Collapsed sidebar badge dot */}
                 {!sidebarOpen && badge > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-violet-500 rounded-full text-white text-xs flex items-center justify-center font-bold">{badge}</span>
+                  <span className={`absolute -top-0.5 -right-0.5 w-4 h-4 ${badgeBg} rounded-full text-white text-xs flex items-center justify-center font-bold`}>
+                    {badge}
+                  </span>
                 )}
               </button>
             );
@@ -192,26 +247,34 @@ const AdminPanel = () => {
         {/* Header */}
         <header className="h-16 bg-[#130d24] border-b border-white/5 flex items-center gap-4 px-6 flex-shrink-0 sticky top-0 z-40">
           <div>
-            <h1 className="text-white font-bold text-base capitalize">{
-              section === "heroslides" ? "Hero Slides" : section
-            }</h1>
+            <h1 className="text-white font-bold text-base capitalize">
+              {section === "heroslides" ? "Hero Slides"
+               : section === "contacts" ? "Contact Messages"
+               : section}
+            </h1>
             <p className="text-white/30 text-xs">
-              Lyra Admin · {new Date().toLocaleDateString("en-IN", { day:"numeric", month:"long", year:"numeric" })}
+              Lyra Admin · {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
             </p>
           </div>
+
           <div className="ml-auto flex items-center gap-3">
             {SEARCH_SECTIONS.includes(section) && (
               <div className="relative">
-                <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                <input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={`Search ${section}...`}
-                  className="w-56 bg-white/5 border border-white/10 text-white placeholder-white/20 rounded-xl px-4 py-2 text-sm outline-none focus:border-violet-500/50 transition-all" />
+                  className="w-56 bg-white/5 border border-white/10 text-white placeholder-white/20 rounded-xl px-4 py-2 text-sm outline-none focus:border-violet-500/50 transition-all"
+                />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 text-sm">⌕</span>
               </div>
             )}
             <div className="relative w-9 h-9 bg-white/5 rounded-xl flex items-center justify-center cursor-pointer hover:bg-white/10 transition-all">
               <span className="text-white/50 text-lg">🔔</span>
               {pendingOrders > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-pink-500 rounded-full text-white text-xs flex items-center justify-center font-bold">{pendingOrders}</span>
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-pink-500 rounded-full text-white text-xs flex items-center justify-center font-bold">
+                  {pendingOrders}
+                </span>
               )}
             </div>
           </div>
@@ -221,6 +284,7 @@ const AdminPanel = () => {
 
         {/* Section content */}
         <main className="flex-1 overflow-y-auto p-6">
+
           {section === "dashboard" && (
             <AdminDashboard
               orders={orders} products={products} customers={customers}
@@ -228,35 +292,43 @@ const AdminPanel = () => {
               onRetry={handleRetry} onNavigate={changeSection}
             />
           )}
+
           {section === "orders" && (
             <AdminOrders
               orders={orders} setOrders={setOrders}
               loading={loading.orders} errors={errors}
-              onRetry={() => fetchOrders()} notify={notify}
+              onRetry={fetchOrders} notify={notify}
               searchQuery={searchQuery}
             />
           )}
+
           {section === "products" && (
             <AdminProducts
               products={products} setProducts={setProducts}
               loading={loading.products} errors={errors}
-              onRetry={() => fetchProducts()} notify={notify}
+              onRetry={fetchProducts} notify={notify}
               searchQuery={searchQuery}
             />
           )}
-          
+
           {section === "categories" && (
             <AdminCategories notify={notify} />
           )}
-          
+
           {section === "customers" && (
             <AdminCustomers
               customers={customers}
               loading={loading.customers} errors={errors}
-              onRetry={() => fetchCustomers()}
+              onRetry={fetchCustomers}
               searchQuery={searchQuery}
             />
           )}
+
+          {/* ── CONTACTS SECTION ── */}
+          {section === "contacts" && (
+            <AdminContacts notify={notify} />
+          )}
+
           {section === "analytics" && (
             <AdminAnalytics
               analytics={analytics}
@@ -264,15 +336,19 @@ const AdminPanel = () => {
               onRetry={fetchAnalytics}
             />
           )}
+
           {section === "heroslides" && (
             <AdminHeroSlides notify={notify} />
           )}
+
           {section === "banners" && (
             <AdminBanners notify={notify} />
           )}
+
           {section === "settings" && (
             <AdminSettings notify={notify} />
           )}
+
         </main>
       </div>
     </div>

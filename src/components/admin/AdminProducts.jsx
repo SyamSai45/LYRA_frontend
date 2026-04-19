@@ -375,7 +375,18 @@ const ProductModal = ({ product, categories, onSave, onClose }) => {
           </div>
 
           {/* Row 5 — image */}
-          {field("Image URL", "image", { col2:false, placeholder:"https://..." })}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">
+              Upload Images
+            </label>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(e) => setForm((f) => ({ ...f, files: e.target.files }))}
+              className="w-full text-sm"
+            />
+          </div>
 
           {/* Row 6 — description */}
           {field("Description", "description", { col2:true, textarea:true, placeholder:"Product description..." })}
@@ -387,11 +398,17 @@ const ProductModal = ({ product, categories, onSave, onClose }) => {
           </div>
         </div>
 
-        {/* Image preview */}
-        {form.image && (
-          <div className="px-6 pb-2">
-            <img src={form.image} alt="preview" className="w-20 h-20 rounded-xl object-cover border border-gray-200"
-              onError={(e) => { e.target.style.display="none"; }} />
+        
+        {/* Preview  Image */}
+        {form.files && (
+          <div className="flex gap-2 mt-2">
+            {[...form.files].map((file, i) => (
+              <img
+                key={i}
+                src={URL.createObjectURL(file)}
+                className="w-16 h-16 object-cover rounded"
+              />
+            ))}
           </div>
         )}
 
@@ -444,26 +461,48 @@ const AdminProducts = ({ products, setProducts, loading, errors, onRetry, notify
 
   // POST / PUT
   const handleSaveProduct = async (form) => {
-    const parsed = {
-      ...form,
-      price:         Number(form.price),
-      originalPrice: Number(form.originalPrice),
-      primaryCategory: form.category || form.primaryCategory,
-      sizes:  typeof form.sizes  === "string" ? form.sizes.split(",").map((s) => s.trim()).filter(Boolean)  : form.sizes,
-      colors: typeof form.colors === "string" ? form.colors.split(",").map((c) => c.trim()).filter(Boolean) : form.colors,
-    };
     try {
+      const formData = new FormData();
+
+      // 🧾 TEXT FIELDS
+      formData.append("name", form.name);
+      formData.append("price", form.price);
+      formData.append("brand", form.brand);
+      formData.append("category", form.category);
+      formData.append("description", form.description);
+
+      formData.append("sizes", form.sizes);
+      formData.append("colors", form.colors);
+
+      // 🖼️ IMAGES
+      if (form.files) {
+        for (let i = 0; i < form.files.length; i++) {
+          formData.append("images", form.files[i]); // 🔥 must match backend
+        }
+      }
+
+      let res;
+
       if (form._id || form.id) {
         const id = form._id || form.id;
-        const res = await apiFetch(`/products/${id}`, { method:"PUT", body:JSON.stringify(parsed) });
-        setProducts((prev) => prev.map((p) => (p._id||p.id) === id ? (res?.product || res || { ...parsed, _id:id }) : p));
-        notify("Product updated!");
+        res = await fetch(`http://localhost:6055/api/admin/products/${id}`, {
+          method: "PUT",
+          body: formData,
+        });
       } else {
-        const res = await apiFetch("/products", { method:"POST", body:JSON.stringify(parsed) });
-        setProducts((prev) => [...prev, res?.product || res]);
-        notify("Product added!");
+        res = await fetch(`http://localhost:6055/api/admin/products`, {
+          method: "POST",
+          body: formData,
+        });
       }
-      setProductModal(null);
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message);
+
+      setProducts((prev) => [...prev, data.product]);
+      notify("Product saved!");
+
     } catch (e) {
       notify(e.message, "error");
     }

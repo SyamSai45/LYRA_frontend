@@ -3567,7 +3567,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart }     from "./CartContext";
 import { useWishlist } from "./WishlistContext";
 import AddToCartModal  from "./AddToCartModal";
-import SearchOverlay   from "./SearchOverlay";
+import SearchOverlay   from "./Searchoverlay";
 import axios           from "axios";
 import LyraFooter      from "./Footer";
 
